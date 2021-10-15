@@ -10,10 +10,35 @@
 
 var fs = require('fs');
 var Promise = require('bluebird');
-
+var promised = require('./promisification.js');
 
 
 var fetchProfileAndWriteToFile = function(readFilePath, writeFilePath) {
+  return new Promise(function (resolve, reject) {
+    fs.readFile(readFilePath, 'utf8', (err, body) => {
+      if (err) {
+        reject(err);
+      } else {
+        var userName = body.split('\n');
+        resolve(userName[0]);
+      }
+    });
+  })
+    .then((profile) => {
+      return promised.getGitHubProfileAsync(profile);
+    })
+    .then((user) => {
+      return new Promise(function (resolve, reject) {
+        fs.writeFile(writeFilePath, JSON.stringify(user), (err) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(user);
+          }
+        });
+      });
+    });
+
   // TODO
 };
 
